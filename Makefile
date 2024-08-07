@@ -11,7 +11,6 @@ all: \
 	deps/musl \
 	deps/musl/release \
 	deps/secp256k1 \
-	deps/secp256k1/src/ecmult_static_pre_context.h \
 	build \
 	build/secp256k1_bench
 
@@ -19,7 +18,7 @@ build:
 	mkdir build
 
 build/secp256k1_bench:
-	$(CC) $(CFLAGS) -Ideps/secp256k1/src -Ideps/secp256k1 -c -o build/secp256k1_bench.o c/secp256k1_bench.c
+	$(CC) $(CFLAGS) -Ideps/secp256k1/src -c -o build/secp256k1_bench.o c/secp256k1_bench.c
 	$(LD) $(LDFLAGS) --gc-sections -o build/secp256k1_bench build/secp256k1_bench.o
 
 clean:
@@ -48,10 +47,7 @@ deps/musl/release:
 	CLANG=$(CC) ./ckb/build.sh
 
 deps/secp256k1:
-	cd deps && git clone https://github.com/nervosnetwork/secp256k1 --branch schnorr
-
-deps/secp256k1/src/ecmult_static_pre_context.h:
-	cd deps/secp256k1 && \
-	./autogen.sh && \
-	CC=$(CC) LD=$(LD) CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" ./configure --enable-ecmult-static-precomputation --with-ecmult-window=6 --enable-module-recovery --host=riscv64-elf && \
-	make
+	cd deps && \
+	git clone https://github.com/bitcoin-core/secp256k1 && \
+	cd secp256k1 && \
+	git checkout 3fdf146
