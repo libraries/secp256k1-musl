@@ -1,8 +1,8 @@
 ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 CC := clang-18
-LD := ld.lld
+LD := clang-18
 CFLAGS := --target=riscv64 -march=rv64imc_zba_zbb_zbc_zbs -O3 -nostdinc -isystem $(ROOT_DIR)/deps/musl/release/include -fdata-sections -ffunction-sections
-LDFLAGS := -nostdlib --sysroot $(ROOT_DIR)/deps/musl/release -L$(ROOT_DIR)/deps/musl/release/lib -L$(ROOT_DIR)/deps/compiler-rt-builtins-riscv/build -lc -lgcc -lcompiler-rt
+LDFLAGS := -Wl,--static -Wl,--gc-sections -nostdlib --sysroot $(ROOT_DIR)/deps/musl/release -L$(ROOT_DIR)/deps/musl/release/lib -L$(ROOT_DIR)/deps/compiler-rt-builtins-riscv/build -lc -lgcc -lcompiler-rt
 
 all: \
 	deps \
@@ -19,8 +19,7 @@ build:
 	mkdir build
 
 build/secp256k1_bench:
-	$(CC) $(CFLAGS) -Ideps/secp256k1/src -Ideps/secp256k1 -c -o build/secp256k1_bench.o c/secp256k1_bench.c
-	$(LD) $(LDFLAGS) --gc-sections -o build/secp256k1_bench build/secp256k1_bench.o
+	$(CC) $(CFLAGS) $(LDFLAGS) -Ideps/secp256k1/src -Ideps/secp256k1 -o build/secp256k1_bench c/secp256k1_bench.c
 
 clean:
 	rm -rf build
@@ -35,7 +34,7 @@ deps/compiler-rt-builtins-riscv:
 
 deps/compiler-rt-builtins-riscv/build/libcompiler-rt.a:
 	cd deps/compiler-rt-builtins-riscv && \
-	make CC=$(CC) LD=$(LD) OBJCOPY=llvm-objcopy AR=llvm-ar RANLIB=llvm-ranlib
+	make CC=$(CC) AR=llvm-ar
 
 deps/musl:
 	cd deps && \

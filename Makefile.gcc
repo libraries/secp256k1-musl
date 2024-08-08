@@ -1,0 +1,33 @@
+CC := riscv64-unknown-elf-gcc
+LD := riscv64-unknown-elf-gcc
+CFLAGS := -O3 -fdata-sections -ffunction-sections
+LDFLAGS := -Wl,--static -Wl,--gc-sections -Wl,-s
+
+all: \
+	deps \
+	deps/secp256k1 \
+	deps/secp256k1/src/ecmult_static_pre_context.h \
+	build \
+	build/secp256k1_bench
+
+build:
+	mkdir build
+
+build/secp256k1_bench:
+	$(CC) $(CFLAGS) $(LDFLAGS) -Ideps/secp256k1/src -Ideps/secp256k1 -o build/secp256k1_bench c/secp256k1_bench.c
+
+clean:
+	rm -rf build
+	rm -rf deps
+
+deps:
+	mkdir deps
+
+deps/secp256k1:
+	cd deps && git clone https://github.com/nervosnetwork/secp256k1 --branch schnorr
+
+deps/secp256k1/src/ecmult_static_pre_context.h:
+	cd deps/secp256k1 && \
+	./autogen.sh && \
+	CC=$(CC) LD=$(LD) ./configure --enable-ecmult-static-precomputation --with-ecmult-window=6 --enable-module-recovery --host=riscv64-elf && \
+	make
